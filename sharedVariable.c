@@ -1,3 +1,4 @@
+// all system resources are shared between threads
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
