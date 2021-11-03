@@ -10,7 +10,7 @@ void* routine(void* args) {
     while (1) {
         printf("Waiting at the barrier...\n");
         sleep(1);
-        pthread_barrier_wait(&barrier);
+        pthread_barrier_wait(&barrier);	// all threads waits for the n-th thread to arrive, then resume together (n = 3rd param for barrier_init)
         printf("We passed the barrier\n");
         sleep(1);
     }
