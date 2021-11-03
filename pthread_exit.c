@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     if (pthread_create(&th, NULL, &roll_dice, NULL) != 0) {
         return 1;
     }
-    // pthread_exit(0);
+    // pthread_exit(0); // nothing after this line is executed but the program is not killed until all threads are done
     if (pthread_join(th, (void**) &res) != 0) {
         return 2;
     }
