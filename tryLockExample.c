@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <time.h>
 
+// multiple set of the same resource, if one is not working, check others (do not wait for a signle one)
+
 // chefs = threads
 // stove = shared data (+mutex)
 
