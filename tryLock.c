@@ -7,14 +7,14 @@
 pthread_mutex_t mutex;
 
 void* routine_lock(void* arg) {
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex); // wait until gets lock
     printf("Got lock\n");
     sleep(1);
     pthread_mutex_unlock(&mutex);
 }
 
 void* routine_trylock(void* arg) {
-    if (pthread_mutex_trylock(&mutex) == 0) {
+    if (pthread_mutex_trylock(&mutex) == 0) {   // not gonna wait if lock is not immediately available
         printf("Got lock\n");
         sleep(1);
         pthread_mutex_unlock(&mutex);
