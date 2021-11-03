@@ -11,10 +11,10 @@ int fuel = 0;
 void* fuel_filling(void* arg) {
     for (int i = 0; i < 5; i++) {
         pthread_mutex_lock(&mutexFuel);
-        fuel += 15;
+        fuel += 30;
         printf("Filled fuel... %d\n", fuel);
         pthread_mutex_unlock(&mutexFuel);
-        pthread_cond_signal(&condFuel);
+        pthread_cond_broadcast(&condFuel);
         sleep(1);
     }
 }
@@ -35,11 +35,11 @@ void* car(void* arg) {
 }
 
 int main(int argc, char* argv[]) {
-    pthread_t th[2];
+    pthread_t th[6];
     pthread_mutex_init(&mutexFuel, NULL);
     pthread_cond_init(&condFuel, NULL);
-    for (int i = 0; i < 2; i++) {
-        if (i == 1) {
+    for (int i = 0; i < 6; i++) {
+        if (i == 4 || i == 5) {
             if (pthread_create(&th[i], NULL, &fuel_filling, NULL) != 0) {
                 perror("Failed to create thread");
             }
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 6; i++) {
         if (pthread_join(th[i], NULL) != 0) {
             perror("Failed to join thread");
         }
