@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         }
         sleep(1);
         printf("==== New round starting ====\n");
-        pthread_barrier_wait(&barrierCalculated);
+        pthread_barrier_wait(&barrierCalculated);   // ensure all calculation is done before identify winner in roll()
     }
 
     for (i = 0; i < THREAD_NUM; i++) {
