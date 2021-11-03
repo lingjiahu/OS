@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     pthread_t th[THREAD_NUM];
     int i;
-    pthread_barrier_init(&barrierRolledDice, NULL, THREAD_NUM + 1);
+    pthread_barrier_init(&barrierRolledDice, NULL, THREAD_NUM + 1); // 8 threads + 1 main thread
     pthread_barrier_init(&barrierCalculated, NULL, THREAD_NUM + 1);
     for (i = 0; i < THREAD_NUM; i++) {
         int* a = malloc(sizeof(int));
