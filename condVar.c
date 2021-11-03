@@ -14,7 +14,7 @@ void* fuel_filling(void* arg) {
         fuel += 30;
         printf("Filled fuel... %d\n", fuel);
         pthread_mutex_unlock(&mutexFuel);
-        pthread_cond_broadcast(&condFuel);
+        pthread_cond_broadcast(&condFuel);  // all threads waiting will get signal, whereas signal() only notifies 1 thread
         sleep(1);
     }
 }
