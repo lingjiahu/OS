@@ -8,10 +8,23 @@ Single level directory - no subdirectories.
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "sfs_api.h"
+#include "disk_emu.h"
 
-#define MAXFILENAME 20  // filename (16) + dot (1) + extension (3)
-#define BLOCK_SIZE 1024
-#define MAXFILESIZE (12*BLOCK_SIZE) + ((BLOCK_SIZE/sizeof(int))*BLOCK_SIZE)
+SuperBlock superBlock;
+INode iNodeTable[NUM_INODES];
+
+
+
+
+void initSuperBlock()
+{
+    
+}
+
+
+
+
 
 /* 
 format virtual disk & create a file system on top of the virtual disk
@@ -23,6 +36,16 @@ input:
 */
 void mksfs(int fresh)
 { 
+    if (fresh)  // create new file system
+    {
+        init_fresh_disk("disk_emu", BLOCK_SIZE, NUM_BLOCKS);
+
+
+    } else  // open file from disk
+    {
+
+
+    }
 
 }
 
