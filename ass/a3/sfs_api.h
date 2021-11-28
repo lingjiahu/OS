@@ -27,7 +27,7 @@ int sfs_remove(char*);
 #define MAXFILENAME 20  // filename (16) + dot (1) + extension (3)
 #define NUM_BLOCKS 1024
 #define BLOCK_SIZE 1024
-#define NUM_INODES 64 
+#define NUM_INODES 100  // MAX_FD in test2
 #define INODE_SIZE sizeof(INode)
 #define RD_BLOCKS (NUM_INODES -1) * INODE_SIZE / BLOCK_SIZE + 1
 #define MAXFILESIZE (12*BLOCK_SIZE) + ((BLOCK_SIZE/sizeof(int))*BLOCK_SIZE)
@@ -43,9 +43,9 @@ typedef struct
 
 typedef struct
 {
-    int size;
+    int size;   // file size in bytes
     int directPtr[12];
-    int indirectPtr;
+    int indirectPtr;    // max: BLOCK_SIZE/sizeof(int)
     bool occupied;
 } INode;
 

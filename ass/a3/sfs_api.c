@@ -215,7 +215,7 @@ int sfs_fopen(char *name)
         return openFileTableIdx;
     }
     else // file does not exist, create a new file
-    { 
+    {
         // get first available slot in i node table
         int iNodeNum;
         for (int i = 0; i < NUM_INODES; i++)
@@ -318,7 +318,20 @@ return:
 */
 int sfs_fseek(int fileID, int loc)
 {
-    
+    // check if file is open, if not, return -1
+    if (openFileTable[fileID] == -1)
+    {
+        return -1;
+    }
+
+    // check if loc is within the valid range, if not, return -1
+    int filesize = iNodeTable[fileID].size;
+    if (loc < 0 || loc >= filesize)
+    {
+        return -1;
+    }
+    openFileTable[fileID] = loc; // update read/ write pointer
+    return 0;
 }
 
 /*
@@ -333,4 +346,61 @@ return:
 */
 int sfs_remove(char *file)
 {
+    // find file in root directory
+    DirectoryEntry dirEntry;
+    int rootDirIdx = -1;
+    for (int i = 0; i < NUM_INODES - 1; i++)
+    {
+        if (strcmp(rootDir[i].fileName, file) == 0)
+        {
+            dirEntry = rootDir[i];
+            rootDirIdx = i;
+        }
+    }
+
+    if (rootDirIdx == -1) // file is not found
+    {
+        return -1;
+    }
+
+    int inodeNum = dirEntry.iNode;
+    if (openFileTable[inodeNum] != -1) // file is open
+    {
+        return -1;
+    }
+
+    INode iNode = iNodeTable[inodeNum];
+    iNode.occupied = false; // remove from inode table
+
+    rootDir[rootDirIdx].occupied = false; // remove from root dir
+    // rearrange root dir - no gap in root dir
+    for (int i = rootDirIdx; i < RDCnt; i++)
+    {
+        rootDir[i] = rootDir[i + 1];
+    }
+
+    // reset relevant bits to 1 in freebitmap
+    int numBlocks = iNode.size / BLOCK_SIZE;
+    for (int i = 0; i < 12 && i < numBlocks; i++) // free bits used for direct pointers
+    {
+        freebitmap[iNode.directPtr[i]] = 1;
+    }
+    if (numBlocks > 12) // indirect pointer is used, max: BLOCK_SIZE/sizeof(int)
+    {
+        int indirectPtrs[BLOCK_SIZE / sizeof(int)]; // TODO:256?
+        read_blocks(iNode.indirectPtr, 1, indirectPtrs);
+        // free blocks pointed by inodes inside the block pointed by indirectPtr
+        for (int i = 0; i < BLOCK_SIZE / sizeof(int); i++)
+        {
+            freebitmap[indirectPtrs[i]] = 1;
+        }
+        // free block pointed by indirectPtr
+        freebitmap[iNode.indirectPtr] = 1;
+    }
+
+    // write to disk: i node table, root dir, freebitmap
+    write_blocks(superBlock.iNodeTableLen + 1, RD_BLOCKS, rootDir);
+    write_blocks(superBlock.iNodeTableLen + 1, RD_BLOCKS, rootDir);
+    write_blocks(NUM_BLOCKS - 1, 1, freebitmap);
+    return 0;
 }
