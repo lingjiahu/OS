@@ -83,7 +83,7 @@ void init_root_table()
 
 /* create a file descriptor in Open File Descriptor Table with these attributes
 first parameter is the fileID */
-void set_fd(int i, int inode_index, inode *i_node, int wr_ptr, int r_ptr)
+void 	set_fd(int i, int inode_index, inode *i_node, int wr_ptr, int r_ptr)
 {
 	open_fd_t[i].inode_index = inode_index;
 	open_fd_t[i].i_node = i_node;

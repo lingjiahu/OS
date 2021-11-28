@@ -1,4 +1,4 @@
-// #include <stdbool.h>
+#include <stdbool.h>
 
 #ifndef SFS_API_H
 #define SFS_API_H
@@ -28,7 +28,8 @@ int sfs_remove(char*);
 #define NUM_BLOCKS 1024
 #define BLOCK_SIZE 1024
 #define NUM_INODES 64 
-#define INODE_SIZE 128
+#define INODE_SIZE sizeof(INode)
+#define RD_BLOCKS (NUM_INODES -1) * INODE_SIZE / BLOCK_SIZE + 1
 #define MAXFILESIZE (12*BLOCK_SIZE) + ((BLOCK_SIZE/sizeof(int))*BLOCK_SIZE)
 
 typedef struct
@@ -56,11 +57,11 @@ typedef struct
 } DirectoryEntry;
 
 // entry in open file descriptor table
-typedef struct 
-{
-    int iNode;
-    int rwPtr;
-} OpenFile;
+// typedef struct 
+// {
+//     int iNode;
+//     int rwPtr;
+// } OpenFile;
 
 
 #endif
