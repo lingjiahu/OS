@@ -13,18 +13,45 @@ Single level directory - no subdirectories.
 
 SuperBlock superBlock;
 INode iNodeTable[NUM_INODES];
-
-
-
+DirectoryEntry rootDir[NUM_INODES - 1];
+int fileCnt; // keep track of current position in directory for sfs_getnextfilename()
+OpenFile openFileTable[NUM_INODES];
 
 void initSuperBlock()
 {
-    
+    strcpy(superBlock.magic, "0xACBD0005");
+    superBlock.blockSize = BLOCK_SIZE;
+    superBlock.FSSize = NUM_BLOCKS;
+    superBlock.iNodeTableLen = NUM_INODES * INODE_SIZE / BLOCK_SIZE;
+    superBlock.rootDir = 0;
 }
 
+void initINodeTable()
+{
+    for (int i = 0; i < NUM_INODES; i++)
+    {
+        iNodeTable[i].occupied = false;
+    }
+}
 
+// root directory: table of directory entries
+// root directory is pointed to by an i node
+// the i node is pointed to by the super block
+void initRootDir()
+{
+    for (int i = 0; i < NUM_INODES-1; i++)
+    {
+        rootDir[i].occupied = false;
+    }
+}
 
-
+// void initOpenFileTable()
+// {
+//     for (int i = 0; i < NUM_INODES; i++)
+//     {
+//         openFileTable[i].occupied = false;
+//     } 
+// }
 
 /* 
 format virtual disk & create a file system on top of the virtual disk
@@ -35,18 +62,24 @@ input:
         fresh == false: open existing file system from disk
 */
 void mksfs(int fresh)
-{ 
-    if (fresh)  // create new file system
+{
+    if (fresh) // create new file system
     {
         init_fresh_disk("disk_emu", BLOCK_SIZE, NUM_BLOCKS);
+        initSuperBlock();
+        write_blocks(0, 1, &superBlock); // write super block (1 block) to the first block of the disk
 
+        initINodeTable();
+        write_blocks(1, superBlock.iNodeTableLen, iNodeTable);
 
-    } else  // open file from disk
-    {
-
+        initRootDir();
+        write_blocks(superBlock.iNodeTableLen+1, , )
 
     }
-
+    else // open file from disk
+    {
+        init_disk("disk_emu", BLOCK_SIZE, NUM_BLOCKS);
+    }
 }
 
 /*
@@ -55,24 +88,23 @@ can be used to loop through a directory
 function remebers current positon in directory at each call TODO: global var?
 
 input:
-    fname: store the name of the next file in directory
-return: non-zero if there is a new file
+    fname: store the name of the next file in directory,
+            store "\n" if there is no file to be returned.
+return: 1 if there is a new file
         0 if all files have been returned
 */
-int sfs_getnextfilename(char* fname)
+int sfs_getnextfilename(char *fname)
 {
-
 }
 
 /*
 get size of a given file
 
 input: path of a file
-return: size of a given file
+return: size in bytes of a given file
 */
-int sfs_getfilesize(const char* path)
+int sfs_getfilesize(const char *path)
 {
-
 }
 
 /*
@@ -83,9 +115,8 @@ input:
     name: name of file to open
 return: index of the newly opened file in the file descriptor table
 */
-int sfs_fopen(char* name)
+int sfs_fopen(char *name)
 {
-
 }
 
 /*
@@ -99,7 +130,6 @@ return:
 */
 int sfs_fclose(int fileID)
 {
-
 }
 
 /*
@@ -113,9 +143,8 @@ input:
     length: size of buf
 return: number of bytes written
 */
-int sfs_fwrite(int fileID, const char* buf, int length)
+int sfs_fwrite(int fileID, const char *buf, int length)
 {
-
 }
 
 /*
@@ -128,9 +157,8 @@ input:
     length: size of characters to be read
 return: number of bytes read
 */
-int sfs_fread(int fileID, char* buf, int length)
+int sfs_fread(int fileID, char *buf, int length)
 {
-
 }
 
 /*
@@ -145,7 +173,6 @@ return:
 */
 int sfs_fseek(int fileID, int loc)
 {
-
 }
 
 /*
@@ -157,7 +184,6 @@ input:
 return:
     TODO:?
 */
-int sfs_remove(char* file)
+int sfs_remove(char *file)
 {
-
 }
