@@ -13,7 +13,6 @@ Single level directory - no subdirectories.
 
 SuperBlock superBlock;
 INode iNodeTable[NUM_INODES];
-int iNodeCnt; // number of occupied inodes
 DirectoryEntry rootDir[NUM_INODES - 1];
 int RDIdx;                     // keep track of current position in directory for sfs_getnextfilename()
 int RDCnt;                     // number of existing files
@@ -82,7 +81,7 @@ void mksfs(int fresh)
         init_fresh_disk("disk_emu", BLOCK_SIZE, NUM_BLOCKS);
 
         initFreeBitMap();
-        freebitmap[NUM_BLOCKS-1] = 0;
+        freebitmap[NUM_BLOCKS - 1] = 0;
 
         initSuperBlock();
         write_blocks(0, 1, &superBlock); // write super block (1 block) to the first block of the disk
@@ -199,28 +198,61 @@ int sfs_fopen(char *name)
             return -1;
         }
 
-        int inode = rootDir[fileIdx].iNode; // i node of file
-
+        int inode = rootDir[fileIdx].iNode;    // i node of file
         int filesize = iNodeTable[inode].size; // TODO: size of file == size of inode
-        openFileTable[RDCnt] = filesize;       // set fd to the end of the file
-    }
-    else
-    { // file does not exist, create a new file
-        // i node table is full - not supposed to happen, check just in case
-        if (iNodeCnt == NUM_INODES)
+
+        // get first available slot in open file table
+        int openFileTableIdx;
+        for (int i = 0; i < NUM_INODES - 1; i++)
         {
-            return -1;
+            if (openFileTable[i] == -1)
+            {
+                openFileTableIdx = i;
+            }
+        }
+
+        openFileTable[openFileTableIdx] = filesize; // set fd to the end of the file
+        return openFileTableIdx;
+    }
+    else // file does not exist, create a new file
+    { 
+        // get first available slot in i node table
+        int iNodeNum;
+        for (int i = 0; i < NUM_INODES; i++)
+        {
+            if (!iNodeTable[i].occupied)
+            {
+                iNodeNum = i;
+            }
         }
 
         // create directory entry
         DirectoryEntry dirEntry;
-        dirEntry.iNode = iNodeCnt;
+        dirEntry.iNode = iNodeNum;
         strcpy(dirEntry.fileName, name);
         dirEntry.occupied = true;
 
         // add directory entry to root directory
         rootDir[RDCnt] = dirEntry;
+        RDCnt++;
         iNodeTable[0].size++;
+
+        // get first available slot in open file table
+        int openFileTableIdx;
+        for (int i = 0; i < NUM_INODES - 1; i++)
+        {
+            if (openFileTable[i] == -1)
+            {
+                openFileTableIdx = i;
+            }
+        }
+
+        openFileTable[openFileTableIdx] = 0;
+
+        // write i node table & root dir
+        write_blocks(1, superBlock.iNodeTableLen, iNodeTable);
+        write_blocks(superBlock.iNodeTableLen + 1, RD_BLOCKS, rootDir);
+        return openFileTableIdx;
     }
 }
 
@@ -231,10 +263,18 @@ input:
     fileID: id of a file in file descriptor table
 return: 
     0 on success
-    negative value (-1) otherwise
+    -1 otherwise
 */
 int sfs_fclose(int fileID)
 {
+    // check if file is open, if not, return -1
+    if (openFileTable[fileID] == -1)
+    {
+        return -1;
+    }
+
+    openFileTable[fileID] = -1;
+    return 0;
 }
 
 /*
@@ -278,6 +318,7 @@ return:
 */
 int sfs_fseek(int fileID, int loc)
 {
+    
 }
 
 /*
