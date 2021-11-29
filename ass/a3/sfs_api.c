@@ -294,16 +294,76 @@ int sfs_fwrite(int fileID, const char *buf, int length)
 
 /*
 read characters from disk to buf
-TODO: from the current file pointer?
+from the current file pointer
 
 input:
-    fileID: id of file to be read from
+    fileID: id of file to be read from, i node number
     buf: data to be read to
-    length: size of characters to be read
-return: number of bytes read
+    length: max number of bytes to be read
+return: 
+    number of bytes read
 */
 int sfs_fread(int fileID, char *buf, int length)
 {
+    int bytesRead = 0;
+    // if file is not open, return 0 bytes read
+    int rwPtr = openFileTable[fileID];
+    if (rwPtr == -1)
+    {
+        return bytesRead;
+    }
+
+    INode inode = iNodeTable[fileID];
+
+    // if file is empty or rwPtr at EOF
+    if (inode.size == 0 || inode.size <= rwPtr)
+    {
+        return bytesRead;
+    }
+
+    INode inode = iNodeTable[fileID];
+
+    // calculate number of blocks to be read
+    int startBlock = rwPtr / BLOCK_SIZE;
+    int startIdx = rwPtr % BLOCK_SIZE;
+    int numBlocks = length / BLOCK_SIZE + 1; // number of blocks to be read
+    int numBlocksRead = 0;
+
+    // calculate bytes to read
+    if (rwPtr + length > inode.size)    // current read/ write pointer location + length exceeds file size
+    {
+        bytesRead = length - rwPtr;
+    } else
+    {
+        bytesRead = length;
+    }
+
+    char *blockBuffer[inode.size]; // store bytes read from start block to end block
+    // read blocks within directPtr
+    for (int i = startBlock; i < 12; i++)
+    {
+        read_blocks(inode.directPtr[startBlock], 1, blockBuffer + numBlocksRead * BLOCK_SIZE);
+        numBlocks--;
+        numBlocksRead++;
+    }
+
+    if (numBlocks >= 12) // read indirect blocks
+    {
+        // read indirect block
+        int indBuffer[BLOCK_SIZE]; // store indirect block
+        read_blocks(inode.indirectPtr, 1, indBuffer);
+        for (int i = 0; i < numBlocks; i++)
+        {
+            read_blocks(indBuffer[i], 1, blockBuffer + numBlocksRead * BLOCK_SIZE);
+            numBlocksRead++;
+        }
+    }
+
+    memcpy(buf, blockBuffer + startIdx, bytesRead); // copy to buf
+    // update rwPtr
+    int newRWPtr = rwPtr + bytesRead;
+    openFileTable[fileID] = newRWPtr;
+    return bytesRead;
 }
 
 /*
